@@ -40,3 +40,8 @@ class UserResponse(UserBase):
 
 class PermissionsUpdate(BaseModel):
     workflow_ids: List[str]
+
+
+class ChangePasswordRequest(BaseModel):
+    current_password: str
+    new_password: str

@@ -48,6 +48,12 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                   </span>
                 )}
               </span>
+              <Link
+                to="/change-password"
+                className="text-sm text-gray-500 hover:text-gray-800 font-medium transition-colors"
+              >
+                Change password
+              </Link>
               <button
                 onClick={handleLogout}
                 className="text-sm text-gray-500 hover:text-red-600 font-medium transition-colors"

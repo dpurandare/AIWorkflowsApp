@@ -4,6 +4,7 @@ import ProtectedRoute from './components/ProtectedRoute'
 import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
 import UserManagement from './pages/admin/UserManagement'
+import ChangePassword from './pages/ChangePassword'
 
 // Individual workflow pages
 import PersonResearcher from './pages/workflows/PersonResearcher'
@@ -36,6 +37,9 @@ export default function App() {
           <Route path="/workflow/presentation-creator"          element={protect(<PresentationCreator />)} />
           <Route path="/workflow/tailored-presentation"         element={protect(<TailoredPresentation />)} />
           <Route path="/workflow/custom-services-presentation"  element={protect(<CustomServicesPresentation />)} />
+
+          {/* Account */}
+          <Route path="/change-password" element={protect(<ChangePassword />)} />
 
           {/* Admin */}
           <Route
