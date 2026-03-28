@@ -1,10 +1,12 @@
 import { FormEvent, useState } from 'react'
-import { Navigate, useNavigate } from 'react-router-dom'
+import { Navigate, useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 
 export default function Login() {
   const { user, login } = useAuth()
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const sessionExpired = searchParams.get('expired') === '1'
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
@@ -34,6 +36,12 @@ export default function Login() {
           <h1 className="text-2xl font-bold text-gray-900">AI Workflows</h1>
           <p className="text-sm text-gray-500 mt-1">Sign in to access your workflows</p>
         </div>
+
+        {sessionExpired && !error && (
+          <div className="bg-amber-50 border border-amber-200 text-amber-800 text-sm px-4 py-3 rounded-md mb-5">
+            Your session has expired. Please sign in again.
+          </div>
+        )}
 
         {error && (
           <div className="bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 rounded-md mb-5">

@@ -17,8 +17,10 @@ client.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
+      const hadToken = !!localStorage.getItem('token')
       localStorage.removeItem('token')
-      window.location.href = '/login'
+      // Append ?expired=1 so the login page can show a "session expired" message
+      window.location.href = hadToken ? '/login?expired=1' : '/login'
     }
     return Promise.reject(error)
   },
