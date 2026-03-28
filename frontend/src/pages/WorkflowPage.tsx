@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom'
 import client from '../api/client'
 import Layout from '../components/Layout'
 import MarkdownResult from '../components/MarkdownResult'
+import { useAuth } from '../contexts/AuthContext'
 import { WORKFLOW_CONFIGS } from '../workflows'
 
 interface Props {
@@ -14,6 +15,11 @@ export default function WorkflowPage({ workflowId: propWorkflowId }: Props) {
   const { workflowId: paramWorkflowId } = useParams<{ workflowId: string }>()
   const workflowId = propWorkflowId ?? paramWorkflowId
   const config = workflowId ? WORKFLOW_CONFIGS[workflowId] : null
+  const { user } = useAuth()
+
+  const canAccess =
+    !!workflowId &&
+    (user?.is_admin === true || (user?.permissions ?? []).includes(workflowId))
 
   const [formData, setFormData] = useState<Record<string, string>>({})
   const [result, setResult] = useState<unknown>(null)
@@ -37,6 +43,29 @@ export default function WorkflowPage({ workflowId: propWorkflowId }: Props) {
         <div className="text-center py-16">
           <p className="text-gray-500">Workflow not found.</p>
           <Link to="/" className="text-blue-600 hover:underline mt-2 inline-block text-sm">
+            ← Back to Dashboard
+          </Link>
+        </div>
+      </Layout>
+    )
+  }
+
+  if (!canAccess) {
+    return (
+      <Layout>
+        <div className="max-w-md mx-auto text-center py-16">
+          <div className="w-14 h-14 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg className="w-7 h-7 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                d="M12 15v2m0 0v2m0-2h2m-2 0H10m2-5V7m0 0V5m0 2h2M12 7H10M4.93 4.93l14.14 14.14" />
+            </svg>
+          </div>
+          <h2 className="text-lg font-bold text-gray-900 mb-2">Access Denied</h2>
+          <p className="text-gray-500 text-sm mb-6">
+            You do not have permission to use <span className="font-medium text-gray-700">{config.name}</span>.
+            Contact your administrator to request access.
+          </p>
+          <Link to="/" className="text-blue-600 hover:underline text-sm">
             ← Back to Dashboard
           </Link>
         </div>
