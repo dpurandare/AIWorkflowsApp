@@ -5,8 +5,14 @@ import Layout from '../components/Layout'
 import MarkdownResult from '../components/MarkdownResult'
 import { WORKFLOW_CONFIGS } from '../workflows'
 
-export default function WorkflowPage() {
-  const { workflowId } = useParams<{ workflowId: string }>()
+interface Props {
+  /** When provided, skips the URL param and uses this workflow directly. */
+  workflowId?: string
+}
+
+export default function WorkflowPage({ workflowId: propWorkflowId }: Props) {
+  const { workflowId: paramWorkflowId } = useParams<{ workflowId: string }>()
+  const workflowId = propWorkflowId ?? paramWorkflowId
   const config = workflowId ? WORKFLOW_CONFIGS[workflowId] : null
 
   const [formData, setFormData] = useState<Record<string, string>>({})
