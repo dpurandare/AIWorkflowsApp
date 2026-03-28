@@ -103,10 +103,32 @@ function RenderValue({ value, depth = 0 }: { value: unknown; depth?: number }) {
   return null
 }
 
+/**
+ * Research workflows return { "output": "<markdown>" } — a single string node.
+ * Unwrap it so we render the markdown directly instead of showing a key label.
+ * Falls back to the raw result for any other shape.
+ */
+function unwrapOutput(result: unknown): { direct: string } | { raw: unknown } {
+  if (typeof result === 'object' && result !== null && !Array.isArray(result)) {
+    const obj = result as Record<string, unknown>
+    // Explicit 'output' key (most research workflows)
+    if (typeof obj['output'] === 'string') {
+      return { direct: obj['output'] }
+    }
+    // Any single-key object whose sole value is a string
+    const entries = Object.entries(obj)
+    if (entries.length === 1 && typeof entries[0][1] === 'string') {
+      return { direct: entries[0][1] as string }
+    }
+  }
+  return { raw: result }
+}
+
 export default function MarkdownResult({ result, hasDownload }: Props) {
   if (result === null || result === undefined) return null
 
   const links = hasDownload ? extractPresentationLinks(result) : {}
+  const unwrapped = unwrapOutput(result)
 
   return (
     <div className="space-y-4">
@@ -153,7 +175,13 @@ export default function MarkdownResult({ result, hasDownload }: Props) {
 
       {/* Result body */}
       <div className="bg-white border border-gray-200 rounded-lg p-6">
-        <RenderValue value={result} />
+        {'direct' in unwrapped ? (
+          <div className="markdown-body">
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>{unwrapped.direct}</ReactMarkdown>
+          </div>
+        ) : (
+          <RenderValue value={unwrapped.raw} />
+        )}
       </div>
     </div>
   )
