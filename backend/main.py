@@ -1,4 +1,5 @@
 import os
+from contextlib import asynccontextmanager
 
 from dotenv import load_dotenv
 from fastapi import FastAPI
@@ -13,29 +14,8 @@ from database import Base, SessionLocal, engine
 from models import User
 from routers import admin_router, auth_router, workflows_router
 
-Base.metadata.create_all(bind=engine)
 
-app = FastAPI(title="AI Workflows App", version="1.0.0")
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",
-        "http://localhost:3000",
-        os.getenv("FRONTEND_ORIGIN", ""),
-    ],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-app.include_router(auth_router.router)
-app.include_router(workflows_router.router)
-app.include_router(admin_router.router)
-
-
-@app.on_event("startup")
-def seed_default_admin():
+def _seed_default_admin():
     db = SessionLocal()
     try:
         if not db.query(User).first():
@@ -57,6 +37,34 @@ def seed_default_admin():
         db.close()
 
 
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    Base.metadata.create_all(bind=engine)
+    _seed_default_admin()
+    yield
+
+
+app = FastAPI(title="AI Workflows App", version="1.0.0", lifespan=lifespan)
+
+# Only include non-empty origins in the CORS list
+_cors_origins = ["http://localhost:5173", "http://localhost:3000"]
+_extra_origin = os.getenv("FRONTEND_ORIGIN", "").strip()
+if _extra_origin:
+    _cors_origins.append(_extra_origin)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=_cors_origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+app.include_router(auth_router.router)
+app.include_router(workflows_router.router)
+app.include_router(admin_router.router)
+
+
 # Serve React frontend build in production
 _frontend_dist = os.path.join(os.path.dirname(__file__), "..", "frontend", "dist")
 if os.path.exists(_frontend_dist):
@@ -67,3 +75,4 @@ if os.path.exists(_frontend_dist):
     @app.get("/{full_path:path}", include_in_schema=False)
     def serve_spa(full_path: str):
         return FileResponse(os.path.join(_frontend_dist, "index.html"))
+

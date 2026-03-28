@@ -5,6 +5,7 @@ import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
 import UserManagement from './pages/admin/UserManagement'
 import ChangePassword from './pages/ChangePassword'
+import NotFound from './pages/NotFound'
 
 // Individual workflow pages
 import PersonResearcher from './pages/workflows/PersonResearcher'
@@ -46,6 +47,9 @@ export default function App() {
             path="/admin"
             element={<ProtectedRoute adminOnly><UserManagement /></ProtectedRoute>}
           />
+
+          {/* 404 */}
+          <Route path="*" element={protect(<NotFound />)} />
         </Routes>
       </BrowserRouter>
     </AuthProvider>

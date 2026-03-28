@@ -40,6 +40,11 @@ export default function UserManagement() {
   const [permSelection, setPermSelection] = useState<string[]>([])
   const [permSaving, setPermSaving] = useState(false)
 
+  const [resetUser, setResetUser] = useState<User | null>(null)
+  const [resetPassword, setResetPassword] = useState('')
+  const [resetError, setResetError] = useState('')
+  const [resetLoading, setResetLoading] = useState(false)
+
   const [toast, setToast] = useState('')
 
   const showToast = (msg: string) => {
@@ -102,6 +107,29 @@ export default function UserManagement() {
     await client.delete(`/admin/users/${user.id}`)
     await refreshUsers()
     showToast(`User "${user.username}" deleted.`)
+  }
+
+  /* ── Reset password modal ── */
+  const handleResetPassword = async () => {
+    setResetError('')
+    if (resetPassword.length < 8) {
+      setResetError('Password must be at least 8 characters.')
+      return
+    }
+    setResetLoading(true)
+    try {
+      await client.put(`/admin/users/${resetUser!.id}`, { password: resetPassword })
+      setResetUser(null)
+      setResetPassword('')
+      showToast(`Password reset for "${resetUser!.username}".`)
+    } catch (err: unknown) {
+      setResetError(
+        (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail ||
+          'Failed to reset password.',
+      )
+    } finally {
+      setResetLoading(false)
+    }
   }
 
   /* ── Permissions modal ── */
@@ -217,6 +245,12 @@ export default function UserManagement() {
                           Permissions
                         </button>
                       )}
+                      <button
+                        onClick={() => { setResetUser(user); setResetPassword(''); setResetError('') }}
+                        className="text-xs text-gray-500 hover:text-gray-800"
+                      >
+                        Reset Password
+                      </button>
                       <button
                         onClick={() => handleToggleAdmin(user)}
                         className="text-xs text-gray-500 hover:text-gray-800"
@@ -362,6 +396,47 @@ export default function UserManagement() {
               </button>
               <button
                 onClick={() => setPermUser(null)}
+                className="border border-gray-300 text-gray-700 hover:bg-gray-50 px-4 py-2 rounded-md text-sm font-medium"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Reset Password Modal ── */}
+      {resetUser && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-40 px-4">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-sm p-6">
+            <h2 className="text-lg font-bold text-gray-900 mb-0.5">Reset Password</h2>
+            <p className="text-sm text-gray-500 mb-4">
+              User: <strong className="text-gray-700">{resetUser.username}</strong>
+            </p>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                New Password <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="password"
+                value={resetPassword}
+                onChange={(e) => setResetPassword(e.target.value)}
+                autoFocus
+                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <p className="text-xs text-gray-400 mt-1">Minimum 8 characters.</p>
+            </div>
+            {resetError && <p className="text-red-600 text-sm mt-3">{resetError}</p>}
+            <div className="flex gap-3 mt-6">
+              <button
+                onClick={handleResetPassword}
+                disabled={resetLoading}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium disabled:opacity-50"
+              >
+                {resetLoading ? 'Saving…' : 'Set Password'}
+              </button>
+              <button
+                onClick={() => setResetUser(null)}
                 className="border border-gray-300 text-gray-700 hover:bg-gray-50 px-4 py-2 rounded-md text-sm font-medium"
               >
                 Cancel
