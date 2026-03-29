@@ -45,3 +45,27 @@ class PermissionsUpdate(BaseModel):
 class ChangePasswordRequest(BaseModel):
     current_password: str
     new_password: str
+
+
+class GroupCreate(BaseModel):
+    name: str
+    description: Optional[str] = None
+
+
+class GroupUpdate(BaseModel):
+    name: Optional[str] = None
+    description: Optional[str] = None
+
+
+class GroupResponse(BaseModel):
+    id: int
+    name: str
+    description: Optional[str] = None
+    workflow_ids: List[str] = []
+    member_ids: List[int] = []
+
+    model_config = {"from_attributes": True}
+
+
+class GroupMembersUpdate(BaseModel):
+    user_ids: List[int]

@@ -13,7 +13,12 @@ router = APIRouter(prefix="/api/workflows", tags=["workflows"])
 def _can_access(user: User, workflow_id: str) -> bool:
     if user.is_admin:
         return True
-    return any(p.workflow_id == workflow_id for p in user.permissions)
+    if any(p.workflow_id == workflow_id for p in user.permissions):
+        return True
+    for membership in user.group_memberships:
+        if any(gp.workflow_id == workflow_id for gp in membership.group.permissions):
+            return True
+    return False
 
 
 @router.get("")
