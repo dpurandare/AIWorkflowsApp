@@ -12,7 +12,7 @@ A web application that provides a clean, role-controlled interface to the **Jade
 - **Markdown result rendering** — research workflow output is rendered as formatted markdown
 - **Presentation download** — presentation workflows display a prominent download/view card when the deck is ready
 - **Change password** — any logged-in user can update their own password
-- **User management** — admins can create, enable/disable, and delete users, and manage per-user workflow permissions
+- **User management** — admins can create, enable/disable, and delete users, manage per-user workflow permissions, and organise users into groups with shared workflow access
 
 ---
 
@@ -48,7 +48,8 @@ AIWorkflowsApp/
 │   ├── main.py                      # App factory, CORS, startup seed
 │   ├── auth.py                      # JWT creation/verification, bcrypt hashing
 │   ├── database.py                  # SQLAlchemy engine and session
-│   ├── models.py                    # User, WorkflowPermission ORM models
+│   ├── models.py                    # User, WorkflowPermission, Group, UserGroup,
+│   │                                # GroupPermission ORM models
 │   ├── schemas.py                   # Pydantic request/response schemas
 │   ├── dependencies.py              # get_current_user, get_admin_user FastAPI deps
 │   ├── utils.py                     # Shared helpers
@@ -60,7 +61,8 @@ AIWorkflowsApp/
 │       │                            # POST /api/auth/change-password
 │       ├── workflows_router.py      # GET /api/workflows,
 │       │                            # POST /api/workflows/{id}/execute
-│       └── admin_router.py          # User CRUD + permissions management
+│       └── admin_router.py          # User CRUD + permissions management,
+│                                    # Group CRUD + group permissions/members
 └── frontend/                        # React + TypeScript + Vite + Tailwind CSS
     └── src/
         ├── App.tsx                  # Routes
@@ -85,7 +87,10 @@ AIWorkflowsApp/
             │   ├── TailoredPresentation.tsx
             │   └── CustomServicesPresentation.tsx
             └── admin/
-                └── UserManagement.tsx  # Create/disable/delete users, set permissions
+                └── UserManagement.tsx  # Users tab: create/disable/delete users,
+                                        # set per-user permissions
+                                        # Groups tab: create groups, assign workflows,
+                                        # manage group members
 ```
 
 ---
@@ -161,14 +166,27 @@ All endpoints require a `Bearer` token in the `Authorization` header (obtained f
 | `GET` | `/api/admin/users/{id}/permissions` | Admin | Gets a user's workflow permissions |
 | `PUT` | `/api/admin/users/{id}/permissions` | Admin | Sets a user's workflow permissions |
 | `GET` | `/api/admin/workflows` | Admin | Lists all available workflows |
+| `GET` | `/api/admin/groups` | Admin | Lists all groups |
+| `POST` | `/api/admin/groups` | Admin | Creates a new group |
+| `PUT` | `/api/admin/groups/{id}` | Admin | Updates a group's name/description |
+| `DELETE` | `/api/admin/groups/{id}` | Admin | Deletes a group |
+| `GET` | `/api/admin/groups/{id}/permissions` | Admin | Gets a group's workflow permissions |
+| `PUT` | `/api/admin/groups/{id}/permissions` | Admin | Sets a group's workflow permissions |
+| `GET` | `/api/admin/groups/{id}/members` | Admin | Gets a group's members |
+| `PUT` | `/api/admin/groups/{id}/members` | Admin | Sets a group's members |
 
 ---
 
 ## RBAC Model
 
 - **Admin** — full access to all 7 workflows and the User Management panel
-- **User** — access only to workflows explicitly assigned by an admin
+- **User** — access only to workflows explicitly assigned by an admin, either directly or via group membership
+
+A user gains access to a workflow if **any** of the following is true:
+1. The user is an admin
+2. The user has a direct workflow permission row
+3. The user belongs to a group that has the workflow permission
 
 Enforcement is at two layers:
-1. **Backend** — every `/api/workflows/{id}/execute` call is checked against the user's permission rows before the n8n proxy request is made
+1. **Backend** — every `/api/workflows/{id}/execute` call checks direct permissions and group-inherited permissions before the n8n proxy request is made
 2. **Frontend** — `WorkflowPage` checks the user's permission list from `AuthContext` and shows an *Access Denied* screen before rendering the form for an unassigned workflow
