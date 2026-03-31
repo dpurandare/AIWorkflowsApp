@@ -36,6 +36,7 @@ function extractPresentationLinks(result: unknown): PresentationLinks {
   return {
     downloadUrl:
       flat['downloadurl'] ||   // covers downloadURL, download_url, download-url
+      flat['url'] ||            // some workflows return URL as the only link
       flat['downloadlink'] ||
       flat['fileurl'],
     viewUrl:

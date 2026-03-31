@@ -1,5 +1,6 @@
-import { FormEvent, useEffect, useState } from 'react'
+import { FormEvent, useEffect, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
+import { useReactToPrint } from 'react-to-print'
 import client from '../api/client'
 import Layout from '../components/Layout'
 import MarkdownResult from '../components/MarkdownResult'
@@ -26,6 +27,24 @@ export default function WorkflowPage({ workflowId: propWorkflowId }: Props) {
   const [loading, setLoading] = useState(false)
   const [elapsedSeconds, setElapsedSeconds] = useState(0)
   const [error, setError] = useState('')
+  const [printError, setPrintError] = useState('')
+  const resultRef = useRef<HTMLDivElement>(null)
+
+  const doPrint = useReactToPrint({
+    contentRef: resultRef,
+    documentTitle: config?.name ? `${config.name}-report` : 'workflow-report',
+    onAfterPrint: () => setPrintError(''),
+    onPrintError: (_location, err) => setPrintError(err?.message || 'Unable to print'),
+  })
+
+  const handlePrint = () => {
+    if (!resultRef.current) {
+      setPrintError('Nothing to export yet. Run a workflow first.')
+      return
+    }
+    setPrintError('')
+    doPrint()
+  }
 
   // Elapsed-time counter while a workflow is running
   useEffect(() => {
@@ -211,16 +230,6 @@ export default function WorkflowPage({ workflowId: propWorkflowId }: Props) {
                 )}
                 {loading ? `Running… (${formatElapsed(elapsedSeconds)})` : 'Run Workflow'}
               </button>
-
-              {result && !loading && (
-                <button
-                  type="button"
-                  onClick={handleReset}
-                  className="border border-gray-300 text-gray-700 hover:bg-gray-50 px-4 py-2 rounded-md text-sm font-medium transition-colors"
-                >
-                  Reset
-                </button>
-              )}
             </div>
           </form>
         </div>
@@ -241,8 +250,37 @@ export default function WorkflowPage({ workflowId: propWorkflowId }: Props) {
         {/* Result */}
         {result !== null && !loading && (
           <div>
-            <h2 className="text-base font-semibold text-gray-800 mb-3">Result</h2>
-            <MarkdownResult result={result} hasDownload={config.has_download} />
+            <div className="flex items-center justify-between mb-3 gap-3 flex-wrap">
+              <h2 className="text-base font-semibold text-gray-800">Result</h2>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={handlePrint}
+                  className="inline-flex items-center gap-2 border border-gray-300 text-gray-700 hover:bg-gray-50 px-4 py-2 rounded-md text-sm font-medium transition-colors"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                      d="M6 9V2h12v7M6 18H5a2 2 0 01-2-2v-5h18v5a2 2 0 01-2 2h-1M9 14h6" />
+                  </svg>
+                  Export as PDF
+                </button>
+                <button
+                  type="button"
+                  onClick={handleReset}
+                  className="border border-gray-300 text-gray-700 hover:bg-gray-50 px-4 py-2 rounded-md text-sm font-medium transition-colors"
+                >
+                  Reset
+                </button>
+              </div>
+            </div>
+            {printError && (
+              <div className="bg-amber-50 border border-amber-200 text-amber-800 text-xs px-3 py-2 rounded-md mb-2">
+                {printError}
+              </div>
+            )}
+            <div ref={resultRef}>
+              <MarkdownResult result={result} hasDownload={config.has_download} />
+            </div>
           </div>
         )}
       </div>

@@ -1,3 +1,4 @@
+import os
 from typing import Any, Dict
 
 import httpx
@@ -8,6 +9,17 @@ from models import User
 from workflows import WORKFLOWS
 
 router = APIRouter(prefix="/api/workflows", tags=["workflows"])
+
+_verify_env = os.getenv("WORKFLOW_VERIFY_SSL", "true").strip().lower()
+_VERIFY_SSL = _verify_env not in {"false", "0", "no"}
+_CA_BUNDLE = os.getenv("WORKFLOW_CA_BUNDLE", "").strip() or None
+
+
+def _get_verify_arg():
+    """Return httpx verify argument respecting optional CA bundle or toggle."""
+    if _CA_BUNDLE:
+        return _CA_BUNDLE
+    return _VERIFY_SSL
 
 
 def _can_access(user: User, workflow_id: str) -> bool:
@@ -53,13 +65,19 @@ async def execute_workflow(
 
     wf = WORKFLOWS[workflow_id]
     try:
-        async with httpx.AsyncClient(timeout=300.0) as client:
+        async with httpx.AsyncClient(timeout=300.0, verify=_get_verify_arg()) as client:
             response = await client.post(wf["url"], json=payload)
             response.raise_for_status()
     except httpx.TimeoutException:
         raise HTTPException(
             status_code=504,
             detail="The workflow timed out. It may still be running on the server.",
+        )
+    except httpx.ConnectError as e:
+        # Surface SSL issues clearly when calling self-signed endpoints
+        raise HTTPException(
+            status_code=502,
+            detail=f"Failed to reach workflow: {str(e)}",
         )
     except httpx.HTTPStatusError as e:
         raise HTTPException(
