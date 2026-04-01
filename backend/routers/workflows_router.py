@@ -64,8 +64,9 @@ async def execute_workflow(
         )
 
     wf = WORKFLOWS[workflow_id]
+    # Allow long-running n8n workflows (15 minutes)
     try:
-        async with httpx.AsyncClient(timeout=300.0, verify=_get_verify_arg()) as client:
+        async with httpx.AsyncClient(timeout=900.0, verify=_get_verify_arg()) as client:
             response = await client.post(wf["url"], json=payload)
             response.raise_for_status()
     except httpx.TimeoutException:
