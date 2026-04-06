@@ -1,6 +1,6 @@
 # AI Workflows App
 
-A web application that provides a clean, role-controlled interface to the **Jade Business Services n8n workflow automation platform** (`https://n8n.jade-biz.com`). Users can run AI-powered research and presentation generation workflows through web forms, with results displayed inline.
+A web application that provides a clean, role-controlled interface to the **Jade Business Services n8n workflow automation platform**. Users can run AI-powered research and presentation generation workflows through web forms, with results displayed inline.
 
 ---
 
@@ -107,9 +107,16 @@ pip install -r requirements.txt
 # (Optional) create a .env file from the example and set a strong SECRET_KEY
 cp .env.example .env
 
+# Choose which n8n server to target
+# N8N_BASE_URL=https://n8n.jade-biz.com
+# or
+# N8N_BASE_URL=https://n8n-2.jade-biz.com
+
 # Start the server
 uvicorn main:app --reload --port 8000
 ```
+
+The backend reads `N8N_BASE_URL` from `backend/.env` and uses it for all workflow webhook calls.
 
 On first start, a default admin account is created:
 

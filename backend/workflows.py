@@ -1,4 +1,13 @@
-from typing import Dict, Any
+import os
+from typing import Any, Dict
+
+
+_DEFAULT_N8N_BASE_URL = "https://n8n.jade-biz.com"
+N8N_BASE_URL = os.getenv("N8N_BASE_URL", _DEFAULT_N8N_BASE_URL).strip().rstrip("/")
+
+
+def _webhook_url(path: str) -> str:
+    return f"{N8N_BASE_URL}{path}"
 
 WORKFLOWS: Dict[str, Dict[str, Any]] = {
     "person-researcher": {
@@ -9,7 +18,7 @@ WORKFLOWS: Dict[str, Dict[str, Any]] = {
             "and SerpAPI. Provide enough qualifying information to uniquely identify the person."
         ),
         "category": "Person Research",
-        "url": "https://n8n.jade-biz.com/webhook/d84df566-c0d4-4a83-94c5-f9d69837ac72",
+        "url": _webhook_url("/webhook/d84df566-c0d4-4a83-94c5-f9d69837ac72"),
         "has_download": False,
     },
     "person-enrichment-apollo": {
@@ -20,7 +29,7 @@ WORKFLOWS: Dict[str, Dict[str, Any]] = {
             "First Name and Last Name are mandatory."
         ),
         "category": "Person Research",
-        "url": "https://n8n.jade-biz.com/webhook/ccb7ab3b-e2d9-47c4-a303-3787b8a0e4f6",
+        "url": _webhook_url("/webhook/ccb7ab3b-e2d9-47c4-a303-3787b8a0e4f6"),
         "has_download": False,
     },
     "company-researcher": {
@@ -31,7 +40,7 @@ WORKFLOWS: Dict[str, Dict[str, Any]] = {
             "Google Gemini, and SerpAPI. Provide qualifying information for best results."
         ),
         "category": "Company Research",
-        "url": "https://n8n.jade-biz.com/webhook/9ae63b1b-d223-4fd7-84f0-e36d250bbbe2",
+        "url": _webhook_url("/webhook/9ae63b1b-d223-4fd7-84f0-e36d250bbbe2"),
         "has_download": False,
     },
     "company-search-agent": {
@@ -42,7 +51,7 @@ WORKFLOWS: Dict[str, Dict[str, Any]] = {
             "information search. Results are merged by a third agent."
         ),
         "category": "Company Research",
-        "url": "https://n8n.jade-biz.com/webhook/fe8ec947-1792-42f7-bf6b-5d4427c34349",
+        "url": _webhook_url("/webhook/fe8ec947-1792-42f7-bf6b-5d4427c34349"),
         "has_download": False,
     },
     "presentation-creator": {
@@ -53,7 +62,7 @@ WORKFLOWS: Dict[str, Dict[str, Any]] = {
             "Returns download and view URLs for the generated deck."
         ),
         "category": "Presentation Generation",
-        "url": "https://n8n.jade-biz.com/webhook/d817dc70-357e-4be6-a6af-50dd9a7191af",
+        "url": _webhook_url("/webhook/d817dc70-357e-4be6-a6af-50dd9a7191af"),
         "has_download": True,
     },
     "tailored-presentation": {
@@ -64,7 +73,7 @@ WORKFLOWS: Dict[str, Dict[str, Any]] = {
             "AI agents customise the content for the audience. Returns download and view URLs."
         ),
         "category": "Presentation Generation",
-        "url": "https://n8n.jade-biz.com/webhook/220a05d4-4cee-483a-b8de-2428e18d34b4",
+        "url": _webhook_url("/webhook/220a05d4-4cee-483a-b8de-2428e18d34b4"),
         "has_download": True,
     },
     "custom-services-presentation": {
@@ -75,7 +84,7 @@ WORKFLOWS: Dict[str, Dict[str, Any]] = {
             "to suggest offerings and produce a presentation content skeleton."
         ),
         "category": "Presentation Generation",
-        "url": "https://n8n.jade-biz.com/webhook/5c9e0ac0-72c3-40ba-9a55-5c55e9609e79",
+        "url": _webhook_url("/webhook/5c9e0ac0-72c3-40ba-9a55-5c55e9609e79"),
         "has_download": False,
     },
 }
