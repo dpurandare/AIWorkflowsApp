@@ -148,6 +148,64 @@ cd frontend && npm run build
 
 The compiled output lands in `frontend/dist/`. The FastAPI backend automatically serves it when that directory exists — a single `uvicorn main:app` process serves both the API and the frontend.
 
+### Docker
+
+The project root includes a `Dockerfile` that builds the frontend and serves the frontend and backend together from a single container.
+
+Build the image from the project root:
+
+```bash
+docker build -t ai-workflows-app .
+```
+
+Run the container in the foreground:
+
+```bash
+docker run --rm -p 8000:8000 \
+    -e SECRET_KEY=replace-with-a-strong-secret \
+    -e N8N_BASE_URL=https://n8n-2.jade-biz.com \
+    -e WORKFLOW_VERIFY_SSL=false \
+    ai-workflows-app
+```
+
+Then open `http://localhost:8000`.
+
+If port `8000` is already in use on your machine, map the container to a different host port, for example `8080`:
+
+```bash
+docker run --rm -p 8080:8000 \
+    -e SECRET_KEY=replace-with-a-strong-secret \
+    -e N8N_BASE_URL=https://n8n-2.jade-biz.com \
+    -e WORKFLOW_VERIFY_SSL=false \
+    ai-workflows-app
+```
+
+Then open `http://localhost:8080`.
+
+To run the container in detached mode:
+
+```bash
+docker run -d --name ai-workflows-app-container -p 8080:8000 \
+    -e SECRET_KEY=replace-with-a-strong-secret \
+    -e N8N_BASE_URL=https://n8n-2.jade-biz.com \
+    -e WORKFLOW_VERIFY_SSL=false \
+    ai-workflows-app
+```
+
+Useful container commands:
+
+```bash
+docker logs -f ai-workflows-app-container
+docker stop ai-workflows-app-container
+docker rm ai-workflows-app-container
+```
+
+Notes:
+
+- The container serves the built frontend and backend from a single process on port `8000`.
+- The SQLite database is created inside the container filesystem by default; use a bind mount if you want the data to persist across container restarts.
+- If the target n8n server uses a trusted certificate chain, set `WORKFLOW_VERIFY_SSL=true`.
+
 ---
 
 ## API Reference
