@@ -1,0 +1,19 @@
+services:
+  app:
+    build:
+      context: .
+    container_name: ai-workflows-app
+    ports:
+      - "8080:8000"
+    environment:
+      APP_DATA_DIR: /data
+      SECRET_KEY: ${SECRET_KEY:?Set SECRET_KEY in your shell or a root .env file before running docker compose.}
+      N8N_BASE_URL: ${N8N_BASE_URL:-https://n8n-2.jade-biz.com}
+      WORKFLOW_VERIFY_SSL: ${WORKFLOW_VERIFY_SSL:-false}
+      FRONTEND_ORIGIN: ${FRONTEND_ORIGIN:-}
+    volumes:
+      - ai-workflows-data:/data
+    restart: unless-stopped
+
+volumes:
+  ai-workflows-data:

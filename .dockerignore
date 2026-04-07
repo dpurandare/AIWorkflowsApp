@@ -10,6 +10,7 @@ backend/.env
 backend/.venv
 backend/venv
 backend/__pycache__
+backend/data
 backend/*.db
 
 frontend/node_modules

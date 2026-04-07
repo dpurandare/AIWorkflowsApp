@@ -107,6 +107,10 @@ pip install -r requirements.txt
 # (Optional) create a .env file from the example and set a strong SECRET_KEY
 cp .env.example .env
 
+# (Optional) override where runtime data is stored
+# Default standalone location: backend/data
+# APP_DATA_DIR=./data
+
 # Choose which n8n server to target
 # N8N_BASE_URL=https://n8n.jade-biz.com
 # or
@@ -117,6 +121,7 @@ uvicorn main:app --reload --port 8000
 ```
 
 The backend reads `N8N_BASE_URL` from `backend/.env` and uses it for all workflow webhook calls.
+Runtime data is stored under `APP_DATA_DIR`. By default, the standalone app uses `backend/data/app.db`.
 
 On first start, a default admin account is created:
 
@@ -152,6 +157,8 @@ The compiled output lands in `frontend/dist/`. The FastAPI backend automatically
 
 The project root includes a `Dockerfile` that builds the frontend and serves the frontend and backend together from a single container.
 
+The container uses `/data` as its application data directory. Mount a named Docker volume there so the SQLite database and optional persisted settings survive container replacement.
+
 Build the image from the project root:
 
 ```bash
@@ -161,7 +168,10 @@ docker build -t ai-workflows-app .
 Run the container in the foreground:
 
 ```bash
+docker volume create ai-workflows-data
+
 docker run --rm -p 8000:8000 \
+    -v ai-workflows-data:/data \
     -e SECRET_KEY=replace-with-a-strong-secret \
     -e N8N_BASE_URL=https://n8n-2.jade-biz.com \
     -e WORKFLOW_VERIFY_SSL=false \
@@ -174,6 +184,7 @@ If port `8000` is already in use on your machine, map the container to a differe
 
 ```bash
 docker run --rm -p 8080:8000 \
+    -v ai-workflows-data:/data \
     -e SECRET_KEY=replace-with-a-strong-secret \
     -e N8N_BASE_URL=https://n8n-2.jade-biz.com \
     -e WORKFLOW_VERIFY_SSL=false \
@@ -186,6 +197,7 @@ To run the container in detached mode:
 
 ```bash
 docker run -d --name ai-workflows-app-container -p 8080:8000 \
+    -v ai-workflows-data:/data \
     -e SECRET_KEY=replace-with-a-strong-secret \
     -e N8N_BASE_URL=https://n8n-2.jade-biz.com \
     -e WORKFLOW_VERIFY_SSL=false \
@@ -200,10 +212,35 @@ docker stop ai-workflows-app-container
 docker rm ai-workflows-app-container
 ```
 
+You can also run the app with Docker Compose. Create a root-level `.env` file or export the variables in your shell first:
+
+```bash
+SECRET_KEY=replace-with-a-strong-secret
+N8N_BASE_URL=https://n8n-2.jade-biz.com
+WORKFLOW_VERIFY_SSL=false
+```
+
+Then start the stack:
+
+```bash
+docker compose up --build -d
+```
+
+The compose setup publishes the app at `http://localhost:8080` and persists application data in the named Docker volume `ai-workflows-data`.
+
+Useful Compose commands:
+
+```bash
+docker compose logs -f
+docker compose down
+docker compose down -v
+```
+
 Notes:
 
 - The container serves the built frontend and backend from a single process on port `8000`.
-- The SQLite database is created inside the container filesystem by default; use a bind mount if you want the data to persist across container restarts.
+- The SQLite database is stored at `/data/app.db` in Docker and `backend/data/app.db` in standalone mode.
+- You can persist additional file-based settings in `APP_DATA_DIR/settings.env`. Real environment variables still take precedence over values in that file.
 - If the target n8n server uses a trusted certificate chain, set `WORKFLOW_VERIFY_SSL=true`.
 
 ---

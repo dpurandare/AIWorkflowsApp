@@ -12,7 +12,8 @@ RUN npm run build
 FROM python:3.12-slim AS runtime
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1
+    PYTHONUNBUFFERED=1 \
+    APP_DATA_DIR=/data
 
 WORKDIR /app
 
@@ -27,6 +28,7 @@ COPY backend/ /app/backend/
 COPY --from=frontend-build /app/frontend/dist /app/frontend/dist
 
 EXPOSE 8000
+VOLUME ["/data"]
 
 WORKDIR /app/backend
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]

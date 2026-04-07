@@ -14,6 +14,8 @@ frontend/.vite/
 
 # Backend
 backend/.venv/
+backend/data/
+backend/app.db
 
 # Distribution / packaging
 .Python
@@ -147,6 +149,7 @@ celerybeat.pid
 .env
 .envrc
 .venv
+*.env
 env/
 venv/
 ENV/

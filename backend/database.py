@@ -3,7 +3,12 @@ import os
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, DeclarativeBase
 
-_DB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "app.db")
+from app_state import DATABASE_PATH, migrate_legacy_database
+
+
+migrate_legacy_database()
+
+_DB_PATH = DATABASE_PATH
 SQLALCHEMY_DATABASE_URL = f"sqlite:///{_DB_PATH}"
 
 engine = create_engine(

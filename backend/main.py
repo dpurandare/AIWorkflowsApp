@@ -1,18 +1,19 @@
 import os
 from contextlib import asynccontextmanager
 
-from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
-load_dotenv()
-
+from app_state import APP_DATA_DIR, load_app_environment
 from auth import get_password_hash
 from database import Base, SessionLocal, engine
 from models import User
 from routers import admin_router, auth_router, workflows_router
+
+
+load_app_environment()
 
 
 def _seed_default_admin():
@@ -39,6 +40,7 @@ def _seed_default_admin():
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    os.makedirs(APP_DATA_DIR, exist_ok=True)
     Base.metadata.create_all(bind=engine)
     _seed_default_admin()
     yield
